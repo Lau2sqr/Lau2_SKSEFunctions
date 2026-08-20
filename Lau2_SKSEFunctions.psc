@@ -23,3 +23,19 @@ Bool Function RegisterForFactionRemoved(Form akListener, String asScriptName) Gl
 
 ; Removes a previously registered FactionRemoved listener.
 Bool Function UnregisterForFactionRemoved(Form akListener, String asScriptName) Global Native
+
+; Adds akKeyword to akForm at runtime (e.g. NPCs, weapons, armor - any form
+; that supports keywords). Returns false if akForm or akKeyword is None, or
+; if akForm does not support keywords.
+Bool Function AddKeyword(Form akForm, Keyword akKeyword) Global Native
+
+; Removes akKeyword from akForm at runtime. Returns false if akForm or
+; akKeyword is None, or if akForm does not support keywords.
+Bool Function RemoveKeyword(Form akForm, Keyword akKeyword) Global Native
+
+; Ref-variant of AddKeyword - resolves akRef's base object internally, so
+; any ObjectReference (e.g. an Actor) can be passed directly.
+Bool Function AddKeywordToRef(ObjectReference akRef, Keyword akKeyword) Global Native
+
+; Ref-variant of RemoveKeyword. See AddKeywordToRef.
+Bool Function RemoveKeywordFromRef(ObjectReference akRef, Keyword akKeyword) Global Native

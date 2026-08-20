@@ -1,5 +1,4 @@
 #include "PapyrusApi.h"
-
 #include "FactionRankHook.h"
 #include "RemoveFromFactionHook.h"
 
@@ -19,6 +18,78 @@ namespace FactionRankHook::PapyrusApi {
         }
     }
 
+    // AddKeyword / RemoveKeyword
+    // Pattern based on powerofthree's Papyrus Extender (PapyrusExtenderSSE, MIT License)
+    // https://github.com/powerof3/PapyrusExtenderSSE
+
+    bool AddKeyword(RE::StaticFunctionTag*, RE::TESForm* a_form, RE::BGSKeyword* a_keyword) {
+        if (!a_form || !a_keyword) {
+            return false;
+        }
+
+        auto keywordForm = a_form->As<RE::BGSKeywordForm>();
+        if (!keywordForm) {
+            return false;
+        }
+
+        return keywordForm->AddKeyword(a_keyword);
+    }
+
+    bool RemoveKeyword(RE::StaticFunctionTag*, RE::TESForm* a_form, RE::BGSKeyword* a_keyword) {
+        if (!a_form || !a_keyword) {
+            return false;
+        }
+
+        auto keywordForm = a_form->As<RE::BGSKeywordForm>();
+        if (!keywordForm) {
+            return false;
+        }
+
+        return keywordForm->RemoveKeyword(a_keyword);
+    }
+
+    // AddKeywordToRef / RemoveKeywordFromRef
+    // Ref-variants of AddKeyword/RemoveKeyword - resolve the reference's base
+    // object internally instead of requiring the caller to do it.
+    // Pattern based on powerofthree's Papyrus Extender (PapyrusExtenderSSE, MIT License)
+    // https://github.com/powerof3/PapyrusExtenderSSE
+
+    bool AddKeywordToRef(RE::StaticFunctionTag*, RE::TESObjectREFR* a_ref, RE::BGSKeyword* a_keyword) {
+        if (!a_ref || !a_keyword) {
+            return false;
+        }
+
+        auto baseForm = a_ref->GetBaseObject();
+        if (!baseForm) {
+            return false;
+        }
+
+        auto keywordForm = baseForm->As<RE::BGSKeywordForm>();
+        if (!keywordForm) {
+            return false;
+        }
+
+        return keywordForm->AddKeyword(a_keyword);
+    }
+
+    bool RemoveKeywordFromRef(RE::StaticFunctionTag*, RE::TESObjectREFR* a_ref, RE::BGSKeyword* a_keyword) {
+        if (!a_ref || !a_keyword) {
+            return false;
+        }
+
+        auto baseForm = a_ref->GetBaseObject();
+        if (!baseForm) {
+            return false;
+        }
+
+        auto keywordForm = baseForm->As<RE::BGSKeywordForm>();
+        if (!keywordForm) {
+            return false;
+        }
+
+        return keywordForm->RemoveKeyword(a_keyword);
+    }
+
     bool RegisterFunctions(RE::BSScript::IVirtualMachine* a_vm) {
         if (!a_vm) {
             return false;
@@ -31,6 +102,12 @@ namespace FactionRankHook::PapyrusApi {
         // changes.
         ok &= FactionRankHook::RegisterNativeFunctions(a_vm);
         ok &= RemoveFromFactionHook::RegisterNativeFunctions(a_vm);
+
+        a_vm->RegisterFunction("AddKeyword", "Lau2_SKSEFunctions", AddKeyword);
+        a_vm->RegisterFunction("RemoveKeyword", "Lau2_SKSEFunctions", RemoveKeyword);
+
+        a_vm->RegisterFunction("AddKeywordToRef", "Lau2_SKSEFunctions", AddKeywordToRef);
+        a_vm->RegisterFunction("RemoveKeywordFromRef", "Lau2_SKSEFunctions", RemoveKeywordFromRef);
 
         spdlog::info("PapyrusApi: native functions registered ({}).", ok ? "ok" : "with errors");
         return ok;

@@ -87,7 +87,7 @@ Install with your mod manager of choice (MO2, Vortex) like any other SKSE plugin
 
 ## Source
 
-[Link to your repository]
+https://github.com/Lau2sqr/Lau2_SKSEFunctions
 
 ## License
 

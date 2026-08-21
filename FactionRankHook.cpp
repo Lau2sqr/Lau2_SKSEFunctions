@@ -1,5 +1,5 @@
 #include "FactionRankHook.h"
-
+#include "LoadStateTracker.h"
 #include <cstring>
 
 namespace FactionRankHook {
@@ -35,9 +35,9 @@ namespace FactionRankHook {
     // Holds the address of the original function, reached via our manual trampoline.
     REL::Relocation<SetFactionRank_t> _SetFactionRank;
 
-    void SetFactionRank_Hook(RE::Actor* a_actor, RE::TESFaction* a_faction, std::int8_t a_rank) {
+   void SetFactionRank_Hook(RE::Actor* a_actor, RE::TESFaction* a_faction, std::int8_t a_rank) {
         _SetFactionRank(a_actor, a_faction, a_rank);
-        if (a_actor && a_faction) {
+        if (a_actor && a_faction && LoadStateTracker::IsGameFullyLoaded()) {
             g_listeners.Dispatch("OnFactionRankChanged", a_actor, a_faction, static_cast<std::int32_t>(a_rank));
         }
     }

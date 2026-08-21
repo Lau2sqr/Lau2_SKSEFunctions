@@ -71,6 +71,7 @@ To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRemoved(Self)`
 
 - Re-registering in `OnPlayerLoadGame()` is required — listener handles are tied to the VM session and become invalid across save loads.
 - Both events fire for the player and for NPCs, including companion/follower recruitment and dismissal (which is implemented internally as a rank change, not add/remove).
+- `OnFactionRankChanged` is automatically suppressed while the game is loading (New Game or Load Game) — the engine itself calls `SetFactionRank` for essentially every NPC with starting factions during initial world setup, which would otherwise flood your listener with thousands of irrelevant calls in a few seconds. The underlying engine behavior is unaffected either way; only the Papyrus event is held back until loading finishes. `OnFactionRemoved` is not gated this way, since removal essentially never happens during loading.
 
 ### Keywords
 

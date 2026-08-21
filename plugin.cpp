@@ -3,6 +3,7 @@
 #include "FactionRankHook.h"
 #include "PapyrusApi.h"
 #include "RemoveFromFactionHook.h"
+#include "LoadStateTracker.h"
 
 // Sets up file-based logging for this plugin under
 // Documents/My Games/Skyrim Special Edition/SKSE/Lau2_SKSEFunctions.log
@@ -42,12 +43,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     InitializeLogging();
 
     auto& trampoline = SKSE::GetTrampoline();
-    // 64 bytes was enough for a single hook; with FactionRankHook and
-    // RemoveFromFactionHook both needing their own manual trampoline stub
-    // (patchSize + 14 bytes each) plus write_branch's own internal space,
-    // headroom is needed for additional future hooks too.
     trampoline.create(256);
 
+    LoadStateTracker::Install();
     FactionRankHook::Install();
     RemoveFromFactionHook::Install();
 

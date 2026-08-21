@@ -39,7 +39,7 @@ endif()
 
 # Setup your SKSE plugin as an SKSE plugin!
 find_package(CommonLibSSE CONFIG REQUIRED)
-add_commonlibsse_plugin(${PROJECT_NAME} SOURCES plugin.cpp FactionRankHook.cpp RemoveFromFactionHook.cpp PapyrusApi.cpp) # <--- specifies plugin.cpp
+add_commonlibsse_plugin(${PROJECT_NAME} SOURCES plugin.cpp FactionRankHook.cpp RemoveFromFactionHook.cpp PapyrusApi.cpp LoadStateTracker.cpp) # <--- specifies plugin.cpp
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
 target_precompile_headers(${PROJECT_NAME} PRIVATE PCH.h) # <--- PCH.h is required!
 

@@ -7,7 +7,7 @@ namespace FactionRankHook {
     namespace {
         // This module's listener registry - owns everything needed to let
         // Papyrus scripts subscribe to the typed FactionRankChange event.
-        PapyrusApi::ListenerRegistry<RE::Actor*, RE::TESFaction*, std::int32_t> g_listeners;
+        Lau2_SKSEFunctions::PapyrusApi::ListenerRegistry<RE::Actor*, RE::TESFaction*, std::int32_t> g_listeners;
 
         bool RegisterForFactionRankChange(RE::StaticFunctionTag*, RE::TESForm* a_listener,
                                           RE::BSFixedString a_scriptName) {

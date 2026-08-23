@@ -39,3 +39,10 @@ Bool Function AddKeywordToRef(ObjectReference akRef, Keyword akKeyword) Global N
 
 ; Ref-variant of RemoveKeyword. See AddKeywordToRef.
 Bool Function RemoveKeywordFromRef(ObjectReference akRef, Keyword akKeyword) Global Native
+
+; Registers akListener for the ItemCrafted event (all four workbenches).
+; Listener script must implement:
+;   Event OnItemCrafted(ObjectReference akBench, Location akLocation, Form akCreatedItem, Int aiWorkbenchType)
+; aiWorkbenchType: 0=Smithing, 1=Tempering, 2=Enchanting, 3=Alchemy
+Bool Function RegisterForItemCrafted(Form akListener, String asScriptName) Global Native
+Bool Function UnregisterForItemCrafted(Form akListener, String asScriptName) Global Native

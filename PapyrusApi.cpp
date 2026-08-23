@@ -1,8 +1,10 @@
 #include "PapyrusApi.h"
+
+#include "CraftHook.h"
 #include "FactionRankHook.h"
 #include "RemoveFromFactionHook.h"
 
-namespace FactionRankHook::PapyrusApi {
+namespace Lau2_SKSEFunctions::PapyrusApi {
 
     namespace Detail {
         RE::VMHandle GetHandleForListener(RE::TESForm* a_form) {
@@ -18,20 +20,17 @@ namespace FactionRankHook::PapyrusApi {
         }
     }
 
-    // AddKeyword / RemoveKeyword
-    // Pattern based on powerofthree's Papyrus Extender (PapyrusExtenderSSE, MIT License)
-    // https://github.com/powerof3/PapyrusExtenderSSE
+    // AddKeyword / RemoveKeyword / AddKeywordToRef / RemoveKeywordFromRef
+    // Pattern based on powerofthree's Papyrus Extender (MIT License).
 
     bool AddKeyword(RE::StaticFunctionTag*, RE::TESForm* a_form, RE::BGSKeyword* a_keyword) {
         if (!a_form || !a_keyword) {
             return false;
         }
-
         auto keywordForm = a_form->As<RE::BGSKeywordForm>();
         if (!keywordForm) {
             return false;
         }
-
         return keywordForm->AddKeyword(a_keyword);
     }
 
@@ -39,36 +38,25 @@ namespace FactionRankHook::PapyrusApi {
         if (!a_form || !a_keyword) {
             return false;
         }
-
         auto keywordForm = a_form->As<RE::BGSKeywordForm>();
         if (!keywordForm) {
             return false;
         }
-
         return keywordForm->RemoveKeyword(a_keyword);
     }
-
-    // AddKeywordToRef / RemoveKeywordFromRef
-    // Ref-variants of AddKeyword/RemoveKeyword - resolve the reference's base
-    // object internally instead of requiring the caller to do it.
-    // Pattern based on powerofthree's Papyrus Extender (PapyrusExtenderSSE, MIT License)
-    // https://github.com/powerof3/PapyrusExtenderSSE
 
     bool AddKeywordToRef(RE::StaticFunctionTag*, RE::TESObjectREFR* a_ref, RE::BGSKeyword* a_keyword) {
         if (!a_ref || !a_keyword) {
             return false;
         }
-
         auto baseForm = a_ref->GetBaseObject();
         if (!baseForm) {
             return false;
         }
-
         auto keywordForm = baseForm->As<RE::BGSKeywordForm>();
         if (!keywordForm) {
             return false;
         }
-
         return keywordForm->AddKeyword(a_keyword);
     }
 
@@ -76,17 +64,14 @@ namespace FactionRankHook::PapyrusApi {
         if (!a_ref || !a_keyword) {
             return false;
         }
-
         auto baseForm = a_ref->GetBaseObject();
         if (!baseForm) {
             return false;
         }
-
         auto keywordForm = baseForm->As<RE::BGSKeywordForm>();
         if (!keywordForm) {
             return false;
         }
-
         return keywordForm->RemoveKeyword(a_keyword);
     }
 
@@ -96,16 +81,12 @@ namespace FactionRankHook::PapyrusApi {
         }
 
         bool ok = true;
-        // Each hook module registers its own native functions here under
-        // the shared "Lau2_SKSEFunctions" script class. Adding a new hook
-        // module means adding one line here - nothing else in this file
-        // changes.
         ok &= FactionRankHook::RegisterNativeFunctions(a_vm);
         ok &= RemoveFromFactionHook::RegisterNativeFunctions(a_vm);
+        ok &= CraftHook::RegisterNativeFunctions(a_vm);
 
         a_vm->RegisterFunction("AddKeyword", "Lau2_SKSEFunctions", AddKeyword);
         a_vm->RegisterFunction("RemoveKeyword", "Lau2_SKSEFunctions", RemoveKeyword);
-
         a_vm->RegisterFunction("AddKeywordToRef", "Lau2_SKSEFunctions", AddKeywordToRef);
         a_vm->RegisterFunction("RemoveKeywordFromRef", "Lau2_SKSEFunctions", RemoveKeywordFromRef);
 
@@ -116,5 +97,6 @@ namespace FactionRankHook::PapyrusApi {
     void ClearAllListeners() {
         FactionRankHook::ClearListeners();
         RemoveFromFactionHook::ClearListeners();
+        CraftHook::ClearListeners();
     }
 }

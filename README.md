@@ -2,15 +2,16 @@
 
 A native SKSE plugin for Skyrim Special Edition / Anniversary Edition that exposes engine-internal events to Papyrus which are not otherwise accessible — in the style of PO3's Papyrus Extender and Dylbill's Papyrus Functions.
 
-Currently, this plugin adds two typed, native Papyrus events related to faction membership (**faction rank changes** and **faction removal**), plus a small set of keyword utility functions.
+Currently, this plugin adds three typed, native Papyrus events related to faction membership (**faction rank changes** and **faction removal**) and crafting (**item crafted**), plus a small set of keyword utility functions.
 
 ## Features
 
 - `OnFactionRankChanged` — fires whenever an actor's rank in a faction changes (covers both `Actor.AddToFaction()` and `Actor.SetFactionRank()`, since both route through the same internal engine function)
 - `OnFactionRemoved` — fires whenever an actor is removed from a faction via `Actor.RemoveFromFaction()`
+- `OnItemCrafted` — fires whenever an item is crafted at a Smithing, Tempering, Enchanting, or Alchemy workbench (including custom `COBJ` recipes on repurposed furniture, e.g. cooking pots)
 - `AddKeyword` / `RemoveKeyword` — add or remove a keyword on a base Form (e.g. an NPC's `TESNPC` record)
 - `AddKeywordToRef` / `RemoveKeywordFromRef` — same, but for an `ObjectReference` directly (resolves the reference's base object internally)
-- Fully typed native API — no FormID-string workarounds, real `Actor`/`Faction` objects passed directly to Papyrus
+- Fully typed native API — no FormID-string workarounds, real `Actor`/`Faction`/`Form` objects passed directly to Papyrus
 - Listener registry automatically cleaned up on new game / load game, so no dangling or duplicate registrations across save loads
 
 ## Requirements
@@ -67,11 +68,36 @@ EndEvent
 
 To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRemoved(Self)`
 
+### Item Crafted
+
+```papyrus
+Event OnInit()
+    Lau2_SKSEFunctions.RegisterForItemCrafted(Self, "MyQuestScript")
+EndEvent
+
+Event OnPlayerLoadGame()
+    Lau2_SKSEFunctions.RegisterForItemCrafted(Self, "MyQuestScript")
+EndEvent
+
+Event OnItemCrafted(ObjectReference akBench, Location akLocation, Form akCreatedItem, Int aiWorkbenchType)
+    ; aiWorkbenchType: 0 = Smithing, 1 = Tempering, 2 = Enchanting, 3 = Alchemy
+    ; your logic here
+EndEvent
+```
+
+To stop listening: `Lau2_SKSEFunctions.UnregisterForItemCrafted(Self, "MyQuestScript")`
+
+**Note:** unlike `RegisterForFactionRankChange`/`RegisterForFactionRemoved`, the second argument here is the **exact class name of the script attached to `akListener`** (e.g. `"MyQuestScript"`), not the event name — the plugin always calls the fixed `OnItemCrafted` event on that script.
+
+`akCreatedItem` is the crafted item's **base Form**, not the specific inventory instance — if your mod needs to distinguish between individually crafted copies of the same item, you'll need to resolve the instance yourself.
+
+`aiWorkbenchType` reflects the internal crafting menu class used, which does not always match the physical furniture's real-world appearance — e.g. a custom `COBJ` recipe placed on a cooking pot may report `0` (Smithing) rather than `3` (Alchemy), depending on which menu class the recipe is wired to. If your mod relies on a specific workbench, verify the reported `aiWorkbenchType` empirically for your recipe rather than assuming it based on the furniture type.
+
 ### Notes
 
-- Re-registering in `OnPlayerLoadGame()` is required — listener handles are tied to the VM session and become invalid across save loads.
-- Both events fire for the player and for NPCs, including companion/follower recruitment and dismissal (which is implemented internally as a rank change, not add/remove).
-- `OnFactionRankChanged` is automatically suppressed while the game is loading (New Game or Load Game) — the engine itself calls `SetFactionRank` for essentially every NPC with starting factions during initial world setup, which would otherwise flood your listener with thousands of irrelevant calls in a few seconds. The underlying engine behavior is unaffected either way; only the Papyrus event is held back until loading finishes. `OnFactionRemoved` is not gated this way, since removal essentially never happens during loading.
+- Re-registering in `OnPlayerLoadGame()` is required for all three events — listener handles are tied to the VM session and become invalid across save loads.
+- `OnFactionRankChanged`/`OnFactionRemoved` fire for the player and for NPCs, including companion/follower recruitment and dismissal (which is implemented internally as a rank change, not add/remove).
+- `OnFactionRankChanged` is automatically suppressed while the game is loading (New Game or Load Game) — the engine itself calls `SetFactionRank` for essentially every NPC with starting factions during initial world setup, which would otherwise flood your listener with thousands of irrelevant calls in a few seconds. The underlying engine behavior is unaffected either way; only the Papyrus event is held back until loading finishes. `OnFactionRemoved` and `OnItemCrafted` are not gated this way, since neither happens during loading.
 
 ### Keywords
 
@@ -90,7 +116,9 @@ Lau2_SKSEFunctions.AddKeywordToRef(akSpouseRef, MySpouseKeyword)
 
 `AddKeyword`/`RemoveKeyword` expect a base Form (e.g. `akActor.GetLeveledActorBase()`) — passing an `ObjectReference`/`Actor` directly will return `false`, since keywords live on the base object, not the reference. Use the `...ToRef`/`...FromRef` variants instead if you're working with a reference.
 
-Unlike the two faction events above, these four functions don't hook anything — they're thin wrappers around CommonLibSSE-NG's own `BGSKeywordForm::AddKeyword()`/`RemoveKeyword()`. That means they're **automatically version-independent**: no `RELOCATION_ID`, no per-version verification needed.
+**Note:** all four keyword functions — including the `...ToRef`/`...FromRef` variants — ultimately write the keyword to the **base Form**, not to an individual instance. There is no engine-level way to attach a keyword to a single item instance while leaving other copies of the same base Form unaffected.
+
+Unlike the events above, these four functions don't hook anything — they're thin wrappers around CommonLibSSE-NG's own `BGSKeywordForm::AddKeyword()`/`RemoveKeyword()`. That means they're **automatically version-independent**: no `RELOCATION_ID`, no per-version verification needed.
 
 ## Installation
 
@@ -100,13 +128,14 @@ Install with your mod manager of choice (MO2, Vortex) like any other SKSE plugin
 
 - Only the two game versions listed above are supported.
 - No VR support.
+- Keywords (see above) always apply to the base Form, never to a single item instance.
 
 ## Credits
 
 - [CommonLibSSE-NG](https://github.com/CharmedBaryon/CommonLibSSE-NG)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444) by meh321
 - Ghidra, used for reverse-engineering the internal engine functions this plugin hooks
-- Keyword function pattern based on [powerofthree's Papyrus Extender](https://github.com/powerof3/PapyrusExtenderSSE) (MIT License)
+- Hook/event patterns based on [powerofthree's Papyrus Extender](https://github.com/powerof3/PapyrusExtenderSSE) (MIT License)
 
 ## Source
 

@@ -4,23 +4,16 @@
 #include <utility>
 #include <vector>
 
-namespace FactionRankHook::PapyrusApi {
+namespace Lau2_SKSEFunctions::PapyrusApi {
 
     namespace Detail {
-        // Resolves the VM handle for a Papyrus object (typically a Quest).
-        // Shared by every hook module's listener registry. Confirmed working
-        // via in-game testing (RegisterForFactionRankChange).
         RE::VMHandle GetHandleForListener(RE::TESForm* a_form);
     }
 
-    // Generic, reusable listener registry for typed native -> Papyrus event
-    // dispatch. Each hook module owns one instance of this (see
-    // FactionRankHook.cpp for the FactionRankChange event and
-    // RemoveFromFactionHook.cpp for the FactionRemoved event), wires its own
-    // native Register/Unregister functions to Register()/Unregister(), and
-    // calls Dispatch() from its C++ hook function. This is what lets
-    // additional hooks be added later without duplicating registry/handle/
-    // dispatch logic - only the event name and argument types change.
+    // Generic listener registry for typed native -> Papyrus event dispatch.
+    // Each hook module owns one instance (FactionRankHook, RemoveFromFactionHook,
+    // CraftHook), wires Register()/Unregister() to its native functions, and
+    // calls Dispatch() from its C++ hook.
     template <typename... Args>
     class ListenerRegistry {
     public:
@@ -65,8 +58,6 @@ namespace FactionRankHook::PapyrusApi {
             return _listeners.size() != before;
         }
 
-        // a_eventName must match an Event declared in the listener's script
-        // exactly, e.g. "OnFactionRankChanged".
         void Dispatch(const char* a_eventName, Args... a_args) {
             auto* vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
             if (!vm) {
@@ -79,10 +70,6 @@ namespace FactionRankHook::PapyrusApi {
             }
 
             for (const auto& entry : _listeners) {
-                // Explicit template arguments: passing a_args directly would
-                // deduce Args as lvalue references, and FunctionArguments is
-                // only defined for non-reference types. MakeFunctionArguments
-                // itself takes Args&&, so each argument needs std::move.
                 auto* funcArgs = RE::MakeFunctionArguments<Args...>(std::move(a_args)...);
 
                 RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
@@ -112,15 +99,12 @@ namespace FactionRankHook::PapyrusApi {
         std::mutex _mutex;
     };
 
-    // Central Papyrus native-function registration hub, in the style of
-    // PO3's Papyrus Extender / Dylbill's Papyrus Functions: one DLL, one
-    // "Lau2_SKSEFunctions" script class. Every hook module's native
-    // functions are registered here - call once from SKSEPluginLoad via:
-    //   SKSE::GetPapyrusInterface()->Register(FactionRankHook::PapyrusApi::RegisterFunctions);
+    // Central Papyrus registration hub - every hook module registers its
+    // native functions here, called once from SKSEPluginLoad via:
+    //   SKSE::GetPapyrusInterface()->Register(Lau2_SKSEFunctions::PapyrusApi::RegisterFunctions);
     bool RegisterFunctions(RE::BSScript::IVirtualMachine* a_vm);
 
-    // Clears every hook module's listener registry. MUST be wired to SKSE's
-    // kNewGame and kPostLoadGame messages in plugin.cpp - VM handles from a
-    // previous save/session are not valid after a load.
+    // Clears every hook module's listener registry. Wired to SKSE's
+    // kNewGame/kPostLoadGame messages in plugin.cpp.
     void ClearAllListeners();
 }

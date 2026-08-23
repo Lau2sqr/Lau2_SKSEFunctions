@@ -5,7 +5,7 @@
 namespace RemoveFromFactionHook {
 
     namespace {
-        FactionRankHook::PapyrusApi::ListenerRegistry<RE::Actor*, RE::TESFaction*> g_listeners;
+        Lau2_SKSEFunctions::PapyrusApi::ListenerRegistry<RE::Actor*, RE::TESFaction*> g_listeners;
 
         bool RegisterForFactionRemoved(RE::StaticFunctionTag*, RE::TESForm* a_listener,
                                        RE::BSFixedString a_scriptName) {

@@ -1,5 +1,6 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include "CraftHook.h"
 #include "FactionRankHook.h"
 #include "PapyrusApi.h"
 #include "RemoveFromFactionHook.h"
@@ -31,12 +32,13 @@ void OnSKSEMessage(SKSE::MessagingInterface::Message* a_msg) {
     switch (a_msg->type) {
         case SKSE::MessagingInterface::kNewGame:
         case SKSE::MessagingInterface::kPostLoadGame:
-            FactionRankHook::PapyrusApi::ClearAllListeners();
+            Lau2_SKSEFunctions::PapyrusApi::ClearAllListeners();
             break;
         default:
             break;
     }
 }
+
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     SKSE::Init(skse);
@@ -48,8 +50,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     LoadStateTracker::Install();
     FactionRankHook::Install();
     RemoveFromFactionHook::Install();
+    CraftHook::Install();
 
-    if (!SKSE::GetPapyrusInterface()->Register(FactionRankHook::PapyrusApi::RegisterFunctions)) {
+   if (!SKSE::GetPapyrusInterface()->Register(Lau2_SKSEFunctions::PapyrusApi::RegisterFunctions)) { 
         spdlog::error("Failed to register Papyrus functions - typed API will not be available.");
     }
 

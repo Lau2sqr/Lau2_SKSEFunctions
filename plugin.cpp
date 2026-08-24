@@ -5,6 +5,7 @@
 #include "PapyrusApi.h"
 #include "RemoveFromFactionHook.h"
 #include "LoadStateTracker.h"
+#include "QuestStageHook.h"
 
 // Sets up file-based logging for this plugin under
 // Documents/My Games/Skyrim Special Edition/SKSE/Lau2_SKSEFunctions.log
@@ -51,6 +52,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     FactionRankHook::Install();
     RemoveFromFactionHook::Install();
     CraftHook::Install();
+    QuestStageHook::Install();
 
    if (!SKSE::GetPapyrusInterface()->Register(Lau2_SKSEFunctions::PapyrusApi::RegisterFunctions)) { 
         spdlog::error("Failed to register Papyrus functions - typed API will not be available.");
@@ -62,7 +64,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
         spdlog::error("Failed to get SKSE messaging interface - listener registry will not reset on load.");
     }
 
-    spdlog::info("Lau2_SKSEFunctions plugin loaded (hooks: FactionRankChange, RemoveFromFaction).");
+    spdlog::info("Lau2_SKSEFunctions plugin loaded (hooks: FactionRankChange, RemoveFromFaction, ItemCrafted, QuestStageChange).");
 
     return true;
 }

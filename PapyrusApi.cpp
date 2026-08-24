@@ -3,6 +3,7 @@
 #include "CraftHook.h"
 #include "FactionRankHook.h"
 #include "RemoveFromFactionHook.h"
+#include "QuestStageHook.h"
 
 namespace Lau2_SKSEFunctions::PapyrusApi {
 
@@ -84,6 +85,7 @@ namespace Lau2_SKSEFunctions::PapyrusApi {
         ok &= FactionRankHook::RegisterNativeFunctions(a_vm);
         ok &= RemoveFromFactionHook::RegisterNativeFunctions(a_vm);
         ok &= CraftHook::RegisterNativeFunctions(a_vm);
+        ok &= QuestStageHook::RegisterNativeFunctions(a_vm);
 
         a_vm->RegisterFunction("AddKeyword", "Lau2_SKSEFunctions", AddKeyword);
         a_vm->RegisterFunction("RemoveKeyword", "Lau2_SKSEFunctions", RemoveKeyword);
@@ -98,5 +100,6 @@ namespace Lau2_SKSEFunctions::PapyrusApi {
         FactionRankHook::ClearListeners();
         RemoveFromFactionHook::ClearListeners();
         CraftHook::ClearListeners();
+        QuestStageHook::ClearListeners();
     }
 }

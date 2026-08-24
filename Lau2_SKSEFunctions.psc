@@ -46,3 +46,9 @@ Bool Function RemoveKeywordFromRef(ObjectReference akRef, Keyword akKeyword) Glo
 ; aiWorkbenchType: 0=Smithing, 1=Tempering, 2=Enchanting, 3=Alchemy
 Bool Function RegisterForItemCrafted(Form akListener, String asScriptName) Global Native
 Bool Function UnregisterForItemCrafted(Form akListener, String asScriptName) Global Native
+
+; Registers akListener for stage changes of akQuest specifically (not all
+; quests in the game). Listener script must implement:
+;   Event OnQuestStageChange(Quest akQuest, Int aiNewStage)
+Bool Function RegisterForQuestStage(Form akListener, String asScriptName, Quest akQuest) Global Native
+Bool Function UnregisterForQuestStage(Form akListener, String asScriptName, Quest akQuest) Global Native

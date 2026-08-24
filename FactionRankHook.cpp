@@ -35,15 +35,13 @@ namespace FactionRankHook {
     // Holds the address of the original function, reached via our manual trampoline.
     REL::Relocation<SetFactionRank_t> _SetFactionRank;
 
-   void SetFactionRank_Hook(RE::Actor* a_actor, RE::TESFaction* a_faction, std::int8_t a_rank) {
+    void SetFactionRank_Hook(RE::Actor* a_actor, RE::TESFaction* a_faction, std::int8_t a_rank) {
         _SetFactionRank(a_actor, a_faction, a_rank);
-        spdlog::info("Lau2 DIAG: SetFactionRank_Hook fired, actor={:X} faction={:X} rank={} fullyLoaded={}",
-                     a_actor ? a_actor->GetFormID() : 0, a_faction ? a_faction->GetFormID() : 0,
-                     static_cast<int>(a_rank), LoadStateTracker::IsGameFullyLoaded());
         if (a_actor && a_faction && LoadStateTracker::IsGameFullyLoaded()) {
             g_listeners.Dispatch("OnFactionRankChanged", a_actor, a_faction, static_cast<std::int32_t>(a_rank));
         }
     }
+    
 
     void Install() {
         // The function starts with "test rdx,rdx" (3 bytes) followed by a 6-byte

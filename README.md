@@ -23,6 +23,7 @@ Currently, this plugin adds three typed, native Papyrus events related to factio
 
 | Version | Status |
 |---|---|
+| AE 1.7.99 | Verified in-game |
 | AE 1.6.1170 | Verified in-game |
 | SE 1.5.97 | Verified in-game |
 | Other AE builds (1.6.640, 1.6.1130, etc.) | **Not supported** (intentionally — not enough demand to justify additional offset research) |
@@ -32,15 +33,19 @@ Currently, this plugin adds three typed, native Papyrus events related to factio
 
 Add `Lau2_SKSEFunctions` as a native script (the `.psc`/`.pex` is included in the download) and call these functions from any script.
 
+**Important:** for all three events below, the second argument to `RegisterFor...` is the **exact class name of the script attached to `akListener`** (e.g. the name of the script you're writing this in) — not the event name. The plugin always calls its own fixed event name (`OnFactionRankChanged`, `OnFactionRemoved`, `OnItemCrafted`) on that script.
+
 ### Faction Rank Changed
 
 ```papyrus
+Scriptname MyQuestScript extends Quest
+
 Event OnInit()
-    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "OnFactionRankChanged")
+    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "MyQuestScript")
 EndEvent
 
 Event OnPlayerLoadGame()
-    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "OnFactionRankChanged")
+    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "MyQuestScript")
 EndEvent
 
 Event OnFactionRankChanged(Actor akActor, Faction akFaction, Int aiNewRank)
@@ -48,17 +53,19 @@ Event OnFactionRankChanged(Actor akActor, Faction akFaction, Int aiNewRank)
 EndEvent
 ```
 
-To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRankChange(Self)`
+To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRankChange(Self, "MyQuestScript")`
 
 ### Faction Removed
 
 ```papyrus
+Scriptname MyQuestScript extends Quest
+
 Event OnInit()
-    Lau2_SKSEFunctions.RegisterForFactionRemoved(Self, "OnFactionRemoved")
+    Lau2_SKSEFunctions.RegisterForFactionRemoved(Self, "MyQuestScript")
 EndEvent
 
 Event OnPlayerLoadGame()
-    Lau2_SKSEFunctions.RegisterForFactionRemoved(Self, "OnFactionRemoved")
+    Lau2_SKSEFunctions.RegisterForFactionRemoved(Self, "MyQuestScript")
 EndEvent
 
 Event OnFactionRemoved(Actor akActor, Faction akFaction)
@@ -66,11 +73,13 @@ Event OnFactionRemoved(Actor akActor, Faction akFaction)
 EndEvent
 ```
 
-To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRemoved(Self)`
+To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRemoved(Self, "MyQuestScript")`
 
 ### Item Crafted
 
 ```papyrus
+Scriptname MyQuestScript extends Quest
+
 Event OnInit()
     Lau2_SKSEFunctions.RegisterForItemCrafted(Self, "MyQuestScript")
 EndEvent
@@ -86,8 +95,6 @@ EndEvent
 ```
 
 To stop listening: `Lau2_SKSEFunctions.UnregisterForItemCrafted(Self, "MyQuestScript")`
-
-**Note:** unlike `RegisterForFactionRankChange`/`RegisterForFactionRemoved`, the second argument here is the **exact class name of the script attached to `akListener`** (e.g. `"MyQuestScript"`), not the event name — the plugin always calls the fixed `OnItemCrafted` event on that script.
 
 `akCreatedItem` is the crafted item's **base Form**, not the specific inventory instance — if your mod needs to distinguish between individually crafted copies of the same item, you'll need to resolve the instance yourself.
 
@@ -126,13 +133,14 @@ Install with your mod manager of choice (MO2, Vortex) like any other SKSE plugin
 
 ## Known Limitations
 
-- Only the two game versions listed above are supported.
+- Only the game versions listed above are supported.
 - No VR support.
 - Keywords (see above) always apply to the base Form, never to a single item instance.
 
 ## Credits
 
-- [CommonLibSSE-NG](https://github.com/CharmedBaryon/CommonLibSSE-NG)
+- [CommonLibSSE-NG](https://github.com/CharmedBaryon/CommonLibSSE-NG) (1.5.97 / 1.6.1170 builds)
+- [CommonLibSSE-NG (alandtse fork)](https://github.com/alandtse/CommonLibSSE-NG) (1.7.99 build — GPL-3.0-or-later)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444) by meh321
 - Ghidra, used for reverse-engineering the internal engine functions this plugin hooks
 - Hook/event patterns based on [powerofthree's Papyrus Extender](https://github.com/powerof3/PapyrusExtenderSSE) (MIT License)
@@ -143,4 +151,6 @@ https://github.com/Lau2sqr/Lau2_SKSEFunctions
 
 ## License
 
-MIT — see `LICENSE` for details. Free to use in any mod, credit appreciated but not required.
+GPL-3.0-or-later — see `LICENSE` for details.
+
+Earlier releases of this plugin were MIT-licensed. As of the 1.7.99-compatible build, this plugin links against a GPL-3.0-or-later-licensed fork of CommonLibSSE-NG, and the resulting combined work is therefore distributed under GPL-3.0-or-later. Calling this plugin's Papyrus functions from your own mod's scripts does not, by itself, require your mod to be GPL-licensed — this only applies to code that directly links against this plugin's own source.

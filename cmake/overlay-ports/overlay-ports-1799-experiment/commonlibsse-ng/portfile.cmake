@@ -1,8 +1,8 @@
 vcpkg_from_github(
         OUT_SOURCE_PATH SOURCE_PATH
         REPO alandtse/CommonLibSSE-NG
-        REF v6.6.0
-        SHA512 7b46371745d592cd1cec3d2f4cf9e1321dd8805de9895141b93c9dfc06fb82e3b10e8f4fd304342c3446ae3bd6f77ee22848edd1e639866fe6335cc65c8f47b7
+        REF v6.7.0
+        SHA512 49e9c373f13710c2b613fe548920e934d4cd0f23fae63458edae47ae71d8ce1cf1dd8e862a37b508039e1210ebc6296f8e606daf41aae7c4e2d9ac45055eba4b
         HEAD_REF main
 )
 vcpkg_configure_cmake(

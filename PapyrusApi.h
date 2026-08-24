@@ -76,7 +76,7 @@ namespace Lau2_SKSEFunctions::PapyrusApi {
                 const bool dispatched =
                     vm->DispatchMethodCall(entry.handle, entry.scriptName, a_eventName, funcArgs, callback);
 
-                spdlog::trace("ListenerRegistry::Dispatch: '{}' -> '{}' ({}).", a_eventName, entry.scriptName.c_str(),
+                spdlog::info("ListenerRegistry::Dispatch: '{}' -> '{}' ({}).", a_eventName, entry.scriptName.c_str(),
                               dispatched ? "ok" : "failed");
             }
         }

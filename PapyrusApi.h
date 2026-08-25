@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <mutex>
 #include <utility>
 #include <vector>
@@ -17,31 +18,24 @@ namespace Lau2_SKSEFunctions::PapyrusApi {
     template <typename... Args>
     class ListenerRegistry {
     public:
-        bool Register(RE::TESForm* a_listener, RE::BSFixedString a_scriptName) {
-            if (!a_listener) {
-                spdlog::warn("ListenerRegistry::Register: akListener is None.");
-                return false;
-            }
-            if (a_scriptName.empty()) {
-                spdlog::warn("ListenerRegistry::Register: asScriptName is empty.");
-                return false;
-            }
-
+        // a_filter is optional - if provided, the listener only receives events
+        // for which a_filter(Args...) returns true. Calling Register() again with
+        // the same handle/scriptname updates the filter.
+        bool Register(RE::TESForm* a_listener, RE::BSFixedString a_scriptName,
+                      std::function<bool(Args...)> a_filter = nullptr) {
             const auto handle = Detail::GetHandleForListener(a_listener);
             if (handle == static_cast<RE::VMHandle>(0)) {
-                spdlog::warn("ListenerRegistry::Register: could not resolve VM handle for {:X}.",
-                             a_listener->GetFormID());
                 return false;
             }
 
             std::scoped_lock lock(_mutex);
-            for (const auto& entry : _listeners) {
+            for (auto& entry : _listeners) {
                 if (entry.handle == handle && entry.scriptName == a_scriptName) {
+                    entry.filter = std::move(a_filter);
                     return true;
                 }
             }
-            _listeners.emplace_back(Entry{handle, a_scriptName});
-            spdlog::info("Listener registered: {} ({:X})", a_scriptName.c_str(), a_listener->GetFormID());
+            _listeners.emplace_back(Entry{handle, a_scriptName, std::move(a_filter)});
             return true;
         }
 
@@ -70,14 +64,23 @@ namespace Lau2_SKSEFunctions::PapyrusApi {
             }
 
             for (const auto& entry : _listeners) {
-                auto* funcArgs = RE::MakeFunctionArguments<Args...>(std::move(a_args)...);
+                if (entry.filter && !entry.filter(a_args...)) {
+                    continue;
+                }
+
+                auto* funcArgs = RE::MakeFunctionArguments<Args...>(Args(a_args)...);
 
                 RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback;
                 const bool dispatched =
                     vm->DispatchMethodCall(entry.handle, entry.scriptName, a_eventName, funcArgs, callback);
 
-                spdlog::trace("ListenerRegistry::Dispatch: '{}' -> '{}' ({}).", a_eventName, entry.scriptName.c_str(),
-                              dispatched ? "ok" : "failed");
+                if (dispatched) {
+                    spdlog::trace("ListenerRegistry::Dispatch: '{}' -> '{}' (ok).", a_eventName,
+                                  entry.scriptName.c_str());
+                } else {
+                    spdlog::warn("ListenerRegistry::Dispatch: '{}' -> '{}' (failed).", a_eventName,
+                                 entry.scriptName.c_str());
+                }
             }
         }
 
@@ -93,8 +96,8 @@ namespace Lau2_SKSEFunctions::PapyrusApi {
         struct Entry {
             RE::VMHandle handle;
             RE::BSFixedString scriptName;
+            std::function<bool(Args...)> filter;
         };
-
         std::vector<Entry> _listeners;
         std::mutex _mutex;
     };

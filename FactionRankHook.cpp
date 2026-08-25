@@ -1,6 +1,8 @@
 #include "FactionRankHook.h"
-#include "LoadStateTracker.h"
+
 #include <cstring>
+
+#include "LoadStateTracker.h"
 
 namespace FactionRankHook {
 
@@ -10,8 +12,19 @@ namespace FactionRankHook {
         Lau2_SKSEFunctions::PapyrusApi::ListenerRegistry<RE::Actor*, RE::TESFaction*, std::int32_t> g_listeners;
 
         bool RegisterForFactionRankChange(RE::StaticFunctionTag*, RE::TESForm* a_listener,
-                                          RE::BSFixedString a_scriptName) {
-            return g_listeners.Register(a_listener, a_scriptName);
+                                          RE::BSFixedString a_scriptName, RE::BGSKeyword* a_filterKeyword) {
+            if (!a_filterKeyword) {
+                return g_listeners.Register(a_listener, a_scriptName);
+            }
+
+            return g_listeners.Register(a_listener, a_scriptName,
+                                        [a_filterKeyword](RE::Actor* a_actor, RE::TESFaction*, std::int32_t) {
+                                            if (!a_actor) {
+                                                return false;
+                                            }
+                                            auto* base = a_actor->GetActorBase();
+                                            return base && base->HasKeyword(a_filterKeyword);
+                                        });
         }
 
         bool UnregisterForFactionRankChange(RE::StaticFunctionTag*, RE::TESForm* a_listener,
@@ -37,11 +50,11 @@ namespace FactionRankHook {
 
     void SetFactionRank_Hook(RE::Actor* a_actor, RE::TESFaction* a_faction, std::int8_t a_rank) {
         _SetFactionRank(a_actor, a_faction, a_rank);
+
         if (a_actor && a_faction && LoadStateTracker::IsGameFullyLoaded()) {
             g_listeners.Dispatch("OnFactionRankChanged", a_actor, a_faction, static_cast<std::int32_t>(a_rank));
         }
     }
-    
 
     void Install() {
         // The function starts with "test rdx,rdx" (3 bytes) followed by a 6-byte

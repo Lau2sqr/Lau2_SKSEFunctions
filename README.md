@@ -6,7 +6,7 @@ Currently, this plugin adds four typed, native Papyrus events related to faction
 
 ## Features
 
-- `OnFactionRankChanged` — fires whenever an actor's rank in a faction changes (covers both `Actor.AddToFaction()` and `Actor.SetFactionRank()`, since both route through the same internal engine function)
+- `OnFactionRankChanged` — fires whenever an actor's rank in a faction changes (covers both `Actor.AddToFaction()` and `Actor.SetFactionRank()`, since both route through the same internal engine function); optionally filterable by a keyword on the actor's base NPC, so only relevant actors reach Papyrus
 - `OnFactionRemoved` — fires whenever an actor is removed from a faction via `Actor.RemoveFromFaction()`
 - `OnItemCrafted` — fires whenever an item is crafted at a Smithing, Tempering, Enchanting, or Alchemy workbench (including custom `COBJ` recipes on repurposed furniture, e.g. cooking pots)
 - `OnQuestStageChange` — fires whenever a specific quest you're watching changes stage, filtered per-quest so you only receive events for the quest you registered for
@@ -41,12 +41,14 @@ Add `Lau2_SKSEFunctions` as a native script (the `.psc`/`.pex` is included in th
 ```papyrus
 Scriptname MyQuestScript extends Quest
 
+Keyword Property MyFilterKeyword Auto
+
 Event OnInit()
-    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "MyQuestScript")
+    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "MyQuestScript", MyFilterKeyword)
 EndEvent
 
 Event OnPlayerLoadGame()
-    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "MyQuestScript")
+    Lau2_SKSEFunctions.RegisterForFactionRankChange(Self, "MyQuestScript", MyFilterKeyword)
 EndEvent
 
 Event OnFactionRankChanged(Actor akActor, Faction akFaction, Int aiNewRank)
@@ -55,6 +57,8 @@ EndEvent
 ```
 
 To stop listening: `Lau2_SKSEFunctions.UnregisterForFactionRankChange(Self, "MyQuestScript")`
+
+The third argument, `akFilterKeyword`, is optional — pass `None` to receive every faction rank change in the game (the original, unfiltered behavior), or pass a `Keyword` to only receive events for actors whose **base NPC record** carries that keyword. This is a native-side filter — non-matching actors never trigger a Papyrus dispatch at all, so it's cheaper than filtering by keyword yourself inside `OnFactionRankChanged`. Keep in mind the keyword must already be present on the actor's base NPC *at the moment the rank change happens* — if your own mod assigns the keyword reactively in response to this same event (or another event that fires around the same time), the very first relevant rank change may not have the keyword yet.
 
 ### Faction Removed
 

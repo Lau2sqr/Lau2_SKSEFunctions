@@ -6,9 +6,12 @@ Scriptname Lau2_SKSEFunctions Hidden
 ;
 ;   Event OnFactionRankChanged(Actor akActor, Faction akFaction, Int aiNewRank)
 ;
+; akFilterKeyword: optional - if set, the listener only receives events for
+; Actors whose base NPC carries this keyword. None = no filter (all events).
+;
 ; Returns false if akListener is None, asScriptName is empty, or the VM
 ; handle for akListener could not be resolved.
-Bool Function RegisterForFactionRankChange(Form akListener, String asScriptName) Global Native
+Bool Function RegisterForFactionRankChange(Form akListener, String asScriptName, Keyword akFilterKeyword) Global Native
 
 ; Removes a previously registered listener. Returns false if no matching
 ; registration was found.
